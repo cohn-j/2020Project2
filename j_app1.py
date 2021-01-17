@@ -9,7 +9,7 @@ import dash_html_components as html
 from dash.dependencies import Input, Output
 import io
 
-app = dash.Dash(__name__)
+# app = dash.Dash(__name__, external_stylesheets=external_stylesheets, external_scripts=external_scripts)
 
 clean_df = pd.read_csv("Resources/clean.csv")
 
@@ -43,6 +43,27 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets, external_sc
 
 available_indicators = clean_df['Sector'].unique()
 
+app.index_string = '''
+<!DOCTYPE html>
+<html>
+    <head>
+        {%metas%}
+        {%favicon%}
+        {%scripts%}
+        {%css%}
+
+    </head>
+    <body> 
+
+            {%app_entry%}
+        <footer>
+            {%config%}
+            {%renderer%}          
+        </footer>
+    </body>
+</html>
+'''
+
 app.layout = html.Div([
     
     html.H1("Stock Data by Sectors", style={'text-align':'center'}),
@@ -71,15 +92,13 @@ app.layout = html.Div([
         ]),
 
     html.Div([
-        dcc.Graph(id='treemap',figure = {})
-    ], style={'width': '100%', 'display': 'inline-block', 'padding': '0 20'}),
+        dcc.Graph(id='treemap',figure = {})],
+        style={'width': '100%', 'display': 'inline-block', 'padding': '0 20'},
+        ),
 
-   html.Div([
-       html.Div(
-       id='candle', style = {'width': '100%', 'height': '400px'})
-       ]) 
+        html.Div(id= 'candle',style = {'width': '100%', 'height':'400px'}),
 
-])  
+])
 
 @app.callback(
     # Output('output_container', 'children'),
@@ -124,8 +143,5 @@ def update_treemap(value):
   return fig2
 
   
-
-
-
 if __name__ == '__main__':
     app.run_server(debug=True)

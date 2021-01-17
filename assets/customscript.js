@@ -1,6 +1,8 @@
 console.log("Hello!")
 
-
+var myVar = setInterval(myTimer, 5000);
+clearInterval(myVar);
+function myTimer (){
 var markersCount = 0;
     
         anychart.onDocumentReady(function () {
@@ -56,7 +58,7 @@ var markersCount = 0;
           var rangeSelector = anychart.ui.rangeSelector();
           // init range selector
           rangeSelector.render(chart);
-        })
+        });
         });
     
         function createMarkers(plot, start, end, color, text) {
@@ -71,5 +73,7 @@ var markersCount = 0;
             .text(text);
     
           markersCount++;
-        }
-    
+        };
+    }
+
+    clearInterval(myVar);
