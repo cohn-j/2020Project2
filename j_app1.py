@@ -29,7 +29,15 @@ clean_df['Day'] = pd.to_numeric(clean_df['Day'])
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+external_scripts = [
+    {'src': 'https://cdn.anychart.com/releases/v8/js/anychart-base.min.js'},
+    {'src': 'https://cdn.anychart.com/releases/v8/js/anychart-ui.min.js'},
+    {'src': 'https://cdn.anychart.com/releases/v8/js/anychart-exports.min.js'},
+    {'src': 'https://cdn.anychart.com/releases/v8/js/anychart-stock.min.js'},
+    {'src': 'https://cdn.anychart.com/releases/v8/js/anychart-data-adapter.min.js'}
+]
+
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets, external_scripts=external_scripts)
 
 
 
@@ -65,8 +73,11 @@ app.layout = html.Div([
     html.Div([
         dcc.Graph(id='treemap',figure = {})
     ], style={'width': '100%', 'display': 'inline-block', 'padding': '0 20'}),
-    
-    
+
+   html.Div([
+       html.Div(
+       id='candle', style = {'width': '100%', 'height': '400px'})
+       ]) 
 
 ])  
 
