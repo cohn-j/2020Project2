@@ -19,11 +19,17 @@ clean_df = pd.read_csv("Resources/clean.csv")
 
 df_tree = pd.read_csv("overview.csv")
 
-clean_df['Year'],clean_df['Month'],clean_df['Day']= clean_df['timestamp'].str.split('-',2).str
+# clean_df['Year'],clean_df['Month'],clean_df['Day']= clean_df['timestamp'].str.split('-',2).str
 
+# clean_df['Year'] = pd.to_numeric(clean_df['Year'])
+# clean_df['Month'] = pd.to_numeric(clean_df['Month'])
+# clean_df['Day'] = pd.to_numeric(clean_df['Day'])
+
+clean_df['Year'],clean_df['Month'],clean_df['Day']= clean_df['timestamp'].str.split('-',2).str
 clean_df['Year'] = pd.to_numeric(clean_df['Year'])
 clean_df['Month'] = pd.to_numeric(clean_df['Month'])
 clean_df['Day'] = pd.to_numeric(clean_df['Day'])
+clean_df['timestamp'] = pd.to_datetime(clean_df['timestamp'], format='%Y%m%d', errors='ignore')
 
 #added
 server = Flask(__name__)
@@ -66,8 +72,11 @@ app.index_string = '''
 
 app.layout = html.Div([
     
-    html.H1("Stock Data by Sectors", style={'text-align':'center'}),
+    html.H1("Stock Sector Dashboard", style={'text-align':'center'}),
     
+    html.Div([
+        dcc.Graph(id='treemap',figure = {})
+        ], style={'width': '100%', 'display': 'inline-block', 'padding': '0 20'}),    
     
     # dcc.Dropdown(
     #             id='dropdown', 
@@ -91,9 +100,25 @@ app.layout = html.Div([
         )
         ]),
 
-        html.Div([
-        dcc.Graph(id='treemap',figure = {})
-    ], style={'width': '100%', 'display': 'inline-block', 'padding': '0 20'}),    
+    html.Div([
+        dcc.Dropdown(
+        id='dropdown',
+        options=[
+            {'label':'Financial Services', 'value':'Financial Services'},
+            {'label':'Energy', 'value':'Energy'}, 
+            {'label':'Communication Services', 'value':'Communication Services'}, 
+            {'label':'Healthcare', 'value':'Healthcare'}, 
+            {'label':'Technology', 'value':'Technology'}, 
+            {'label':'Consumer Cyclical', 'value':'Consumer Cyclical'},
+            {'label':'Industrials', 'value':'Industrials'} 
+        ],
+        value='Financial Services'
+        ),
+    ]),
+    html.Div([
+       dcc.Graph(id='candle', figure = {})
+    ], 
+    style = {'width': '100%', 'height': '600px'}),
 
     html.Div([html.A(html.Button('Click to view more plotting!', className='three columns'),
     href='static/candle.html', target='_blank')])
@@ -109,12 +134,10 @@ app.layout = html.Div([
 def update_figure(selected_year):
     filtered_df = clean_df[clean_df.Year == selected_year]
     # dff = clean_df[clean_df['Year'] == year_value]
-    
-    fig = px.scatter(filtered_df, x="Year", y="close",
+    fig = px.scatter(filtered_df, x="timestamp", y="close",
                      size="volume", color="Sector", hover_name="Ticker",
                      log_x=False, size_max=55)
-
-    fig.update_layout(transition_duration=500)                 
+    fig.update_layout(title = 'Monthly Closing Price per Stock per Sector', transition_duration=500)             
 
    
     
@@ -136,9 +159,39 @@ def update_treemap(value):
   values=df_tree["MarketCapitalization"],
   hover_data = ['MarketCapitalization'])
 
-  fig2.update_layout(treemapcolorway=['green', 'lightgreen'])
+  fig2.update_layout(title='Treemap',
+  treemapcolorway=['green', 'lightgreen'])
   
   return fig2
+
+@ app.callback(
+    Output('candle','figure'),
+    Input('dropdown','value')
+)
+def update_candle(selected_sector):
+    dff = clean_df.copy()
+    fin_df = dff[dff["Sector"] == selected_sector]
+    fig3 = go.Figure(data=[go.Candlestick(x=fin_df['timestamp'],
+                open=fin_df['open'],
+                high=fin_df['high'],
+                low=fin_df['low'],
+                close=fin_df['close'],
+                increasing_line_color= 'lightgreen', 
+                decreasing_line_color= 'gray',
+                name=selected_sector,
+                showlegend=True,
+                visible=True,
+                ids=['Financial Services','Energy','Healthcare','Consumer Cyclical','Communication Services','Technology'],
+                hovertext=fin_df['Ticker']
+                )])
+    fig3.update_layout(
+        title='Candlestick',
+        yaxis_title=selected_sector
+#         xaxis_rangeslider_visible='slider' in value
+    )
+
+    return fig3
+
 
 @app.server.route('/static/<resource>')
 def serve_static(resource):
