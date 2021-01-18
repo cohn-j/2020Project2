@@ -8,6 +8,10 @@ import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
 import io
+#added
+import flask
+import os
+from flask import Flask
 
 # app = dash.Dash(__name__, external_stylesheets=external_stylesheets, external_scripts=external_scripts)
 
@@ -21,6 +25,10 @@ clean_df['Year'] = pd.to_numeric(clean_df['Year'])
 clean_df['Month'] = pd.to_numeric(clean_df['Month'])
 clean_df['Day'] = pd.to_numeric(clean_df['Day'])
 
+#added
+server = Flask(__name__)
+STATIC_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
+
 # print(clean_df)
 
 # url="https://raw.githubusercontent.com/cohn-j/2020Project2/blob/dev/clean.csv"
@@ -29,15 +37,7 @@ clean_df['Day'] = pd.to_numeric(clean_df['Day'])
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
-external_scripts = [
-    {'src': 'https://cdn.anychart.com/releases/v8/js/anychart-base.min.js'},
-    {'src': 'https://cdn.anychart.com/releases/v8/js/anychart-ui.min.js'},
-    {'src': 'https://cdn.anychart.com/releases/v8/js/anychart-exports.min.js'},
-    {'src': 'https://cdn.anychart.com/releases/v8/js/anychart-stock.min.js'},
-    {'src': 'https://cdn.anychart.com/releases/v8/js/anychart-data-adapter.min.js'}
-]
-
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets, external_scripts=external_scripts)
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 
 
@@ -91,13 +91,12 @@ app.layout = html.Div([
         )
         ]),
 
-    html.Div([
-        dcc.Graph(id='treemap',figure = {})],
-        style={'width': '100%', 'display': 'inline-block', 'padding': '0 20'},
-        ),
+        html.Div([
+        dcc.Graph(id='treemap',figure = {})
+    ], style={'width': '100%', 'display': 'inline-block', 'padding': '0 20'}),    
 
-        html.Div(id= 'candle',style = {'width': '100%', 'height':'400px'}),
-
+    html.Div([html.A(html.Button('Click to view more plotting!', className='three columns'),
+    href='static/candle.html', target='_blank')])
 ])
 
 @app.callback(
@@ -138,10 +137,12 @@ def update_treemap(value):
   hover_data = ['MarketCapitalization'])
 
   fig2.update_layout(treemapcolorway=['green', 'lightgreen'])
-
-
+  
   return fig2
 
+@app.server.route('/static/<resource>')
+def serve_static(resource):
+    return flask.send_from_directory(STATIC_PATH, resource)
   
 if __name__ == '__main__':
     app.run_server(debug=True)
