@@ -63,6 +63,27 @@ app.layout = html.Div([
         ]),
 
     html.Div([
+        dcc.Dropdown(
+        id='dropdown',
+        options=[
+            {'label':'Financial Services', 'value':'Financial Services'},
+            {'label':'Energy', 'value':'Energy'}, 
+            {'label':'Communication Services', 'value':'Communication Services'}, 
+            {'label':'Healthcare', 'value':'Healthcare'}, 
+            {'label':'Technology', 'value':'Technology'}, 
+            {'label':'Consumer Cyclical', 'value':'Consumer Cyclical'},
+            {'label':'Industrials', 'value':'Industrials'} 
+        ],
+        value='Financial Services'
+        ),
+    ]),
+
+    html.Div([
+       dcc.Graph(id='candle', figure = {})
+    ], 
+    style = {'width': '100%', 'height': '600px'}),    
+
+    html.Div([
         dcc.Graph(id='treemap',figure = {})
     ], style={'width': '100%', 'display': 'inline-block', 'padding': '0 20'}),
     
@@ -112,7 +133,33 @@ def update_treemap(value):
 
   return fig2
 
-  
+@ app.callback(
+    Output('candle','figure'),
+    Input('dropdown','value')
+)
+def update_candle(selected_sector):
+    dff = clean_df.copy()
+    fin_df = dff[dff["Sector"] == selected_sector]
+    fig3 = go.Figure(data=[go.Candlestick(x=fin_df['timestamp'],
+                open=fin_df['open'],
+                high=fin_df['high'],
+                low=fin_df['low'],
+                close=fin_df['close'],
+                increasing_line_color= 'lightgreen', 
+                decreasing_line_color= 'gray',
+                name=selected_sector,
+                showlegend=True,
+                visible=True,
+                ids=['Financial Services','Energy','Healthcare','Consumer Cyclical','Communication Services','Technology'],
+                hovertext=fin_df['Ticker']
+                )])
+    fig3.update_layout(
+        title='Candlestick',
+        yaxis_title=selected_sector
+#         xaxis_rangeslider_visible='slider' in value
+    )
+
+    return fig3
 
 
 
